@@ -5,92 +5,83 @@ import {
   Text,
   View,
   ImageBackground,
-  ScrollView,
   StyleSheet,
   KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
-import { formStyles } from "./styles";
+import { formStyles } from "./Styles";
 
 import bgImage from "./image/PhotoBG.jpg";
 
 export default function LoginScreen() {
-  const [isFocused, setIsFocused] = useState({
-    email: false,
-    password: false,
-  });
+  const [isShowKeyboard, setIsShowKeyboard] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleFocus = (field) => {
-    setIsFocused((prevState) => ({
-      ...prevState,
-      [field]: true,
-    }));
-  };
-  const handleBlur = (field) => {
-    setIsFocused((prevState) => ({
-      ...prevState,
-      [field]: false,
-    }));
+  const handleRegistration = () => {
+    const formData = {
+      email: email,
+      password: password,
+    };
+    console.log(`Login: ${JSON.stringify(formData)}`);
   };
 
-  const inputStyle = (field) =>
-    isFocused[field] ? formStyles.inputFocused : formStyles.input;
-
-  const formStyle = {
-    ...formStyles.formContainer,
-    marginBottom: isFocused.email || isFocused.password ? -240 : 0,
-  };
   return (
-    <ImageBackground source={bgImage} style={formStyles.backgroundImage}>
-      <View style={formStyles.container}>
-        <ScrollView
-          contentContainerStyle={formStyles.scrollContainer}
-          keyboardShouldPersistTaps="handled"
+    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+      <ImageBackground source={bgImage} style={formStyles.backgroundImage}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
+          <View
+            style={[
+              {
+                ...formStyles.formContainer,
+                marginBottom: isShowKeyboard ? -220 : 0,
+              },
+              styles.loginContainer,
+            ]}
           >
-            <View
+            <Text style={[formStyles.title, styles.loginTitle]}>Увійти</Text>
+            <TextInput
+              style={[formStyles.input, formStyles.mainText]}
+              placeholder="Адреса електронної пошти"
+              onFocus={() => setIsShowKeyboard(true)}
+              onBlur={() => setIsShowKeyboard(false)}
+              onChangeText={(text) => setEmail(text)}
+            />
+            <TextInput
               style={[
-                formStyle,
-                formStyles.formContainer,
-                styles.loginContainer,
+                formStyles.input,
+                formStyles.lastInput,
+                formStyles.mainText,
               ]}
+              placeholder="Пароль"
+              secureTextEntry={true}
+              onFocus={() => setIsShowKeyboard(true)}
+              onBlur={() => setIsShowKeyboard(false)}
+              onChangeText={(text) => setPassword(text)}
+            />
+            <TouchableOpacity
+              style={formStyles.button}
+              onPress={handleRegistration}
             >
-              <Text style={[formStyles.title, styles.loginTitle]}>Увійти</Text>
-              <TextInput
-                style={[inputStyle("email"), formStyles.mainText]}
-                placeholder="Адреса електронної пошти"
-                onFocus={() => handleFocus("email")}
-                onBlur={() => handleBlur("email")}
-              />
-              <TextInput
-                style={[
-                  inputStyle("password"),
-                  formStyles.lastInput,
-                  formStyles.mainText,
-                ]}
-                placeholder="Пароль"
-                onFocus={() => handleFocus("password")}
-                onBlur={() => handleBlur("password")}
-              />
-              <TouchableOpacity style={formStyles.button}>
-                <Text style={[formStyles.buttonText, formStyles.mainText]}>
-                  Увійти
+              <Text style={[formStyles.buttonText, formStyles.mainText]}>
+                Увійти
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Text style={[formStyles.mainText, formStyles.text]}>
+                Немає акаунту?{" "}
+                <Text style={{ textDecorationLine: "underline" }}>
+                  Зареєструватися
                 </Text>
-              </TouchableOpacity>
-              <TouchableOpacity>
-                <Text style={[formStyles.mainText, formStyles.text]}>
-                  Немає акаунту?{" "}
-                  <Text style={{ textDecorationLine: "underline" }}>
-                    Зареєструватися
-                  </Text>
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </KeyboardAvoidingView>
-        </ScrollView>
-      </View>
-    </ImageBackground>
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </ImageBackground>
+    </TouchableWithoutFeedback>
   );
 }
 

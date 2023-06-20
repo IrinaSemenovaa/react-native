@@ -4,12 +4,6 @@ export const formStyles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
     resizeMode: "contain",
-  },
-  container: {
-    flex: 1,
-  },
-  scrollContainer: {
-    flex: 1,
     justifyContent: "flex-end",
   },
   formContainer: {

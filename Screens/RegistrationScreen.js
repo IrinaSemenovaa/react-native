@@ -6,106 +6,97 @@ import {
   View,
   ImageBackground,
   Image,
-  ScrollView,
   StyleSheet,
   KeyboardAvoidingView,
+  Keyboard,
 } from "react-native";
-import { formStyles } from "./styles";
+import { formStyles } from "./Styles";
 
 import bgImage from "./image/PhotoBG.jpg";
 import avatarImage from "./image/defAvatar.png";
 import addBtn from "./image/add.png";
+import { TouchableWithoutFeedback } from "react-native";
 
 export default function RegistrationScreen() {
-  const [isFocused, setIsFocused] = useState({
-    login: false,
-    email: false,
-    password: false,
-  });
+  const [isShowKeyboard, setIsShowKeyboard] = useState(false);
+  const [login, setLogin] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleFocus = (field) => {
-    setIsFocused((prevState) => ({
-      ...prevState,
-      [field]: true,
-    }));
+  const handleRegistration = () => {
+    const formData = {
+      login: login,
+      email: email,
+      password: password,
+    };
+    console.log(`Registration: ${JSON.stringify(formData)}`);
   };
-  const handleBlur = (field) => {
-    setIsFocused((prevState) => ({
-      ...prevState,
-      [field]: false,
-    }));
-  };
-
-  const formStyle = {
-    ...formStyles.formContainer,
-    marginBottom:
-      isFocused.email || isFocused.login || isFocused.password ? -200 : 0,
-  };
-
-  const inputStyle = (field) =>
-    isFocused[field] ? formStyles.inputFocused : formStyles.input;
 
   return (
-    <ImageBackground source={bgImage} style={formStyles.backgroundImage}>
-      <View style={formStyles.container}>
-        <ScrollView
-          contentContainerStyle={formStyles.scrollContainer}
-          keyboardShouldPersistTaps="handled"
+    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+      <ImageBackground source={bgImage} style={formStyles.backgroundImage}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
+          <View
+            style={[
+              {
+                ...formStyles.formContainer,
+                marginBottom: isShowKeyboard ? -200 : 0,
+              },
+              styles.registationContainer,
+            ]}
           >
-            <View
-              style={[
-                formStyle,
-                formStyles.formContainer,
-                styles.registationContainer,
-              ]}
-            >
-              <View style={styles.avatarContainer}>
-                <Image source={avatarImage} style={styles.avatar} />
-                <View style={styles.plusContainer}>
-                  <Image source={addBtn} style={styles.plusIcon} />
-                </View>
+            <View style={styles.avatarContainer}>
+              <Image source={avatarImage} style={styles.avatar} />
+              <View style={styles.plusContainer}>
+                <Image source={addBtn} style={styles.plusIcon} />
               </View>
-              <Text style={formStyles.title}>Реєстрація</Text>
-              <TextInput
-                style={[inputStyle("login"), formStyles.mainText]}
-                placeholder="Логін"
-                onFocus={() => handleFocus("login")}
-                onBlur={() => handleBlur("login")}
-              />
-              <TextInput
-                style={[inputStyle("email"), formStyles.mainText]}
-                placeholder="Адреса електронної пошти"
-                onFocus={() => handleFocus("email")}
-                onBlur={() => handleBlur("email")}
-              />
-              <TextInput
-                style={[
-                  inputStyle("password"),
-                  formStyles.lastInput,
-                  formStyles.mainText,
-                ]}
-                placeholder="Пароль"
-                onFocus={() => handleFocus("password")}
-                onBlur={() => handleBlur("password")}
-              />
-              <TouchableOpacity style={formStyles.button}>
-                <Text style={[formStyles.buttonText, formStyles.mainText]}>
-                  Зареєстуватися
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity>
-                <Text style={[formStyles.mainText, formStyles.text]}>
-                  Вже є акаунт? Увійти
-                </Text>
-              </TouchableOpacity>
             </View>
-          </KeyboardAvoidingView>
-        </ScrollView>
-      </View>
-    </ImageBackground>
+            <Text style={formStyles.title}>Реєстрація</Text>
+            <TextInput
+              style={[formStyles.mainText, formStyles.input]}
+              placeholder="Логін"
+              onFocus={() => setIsShowKeyboard(true)}
+              onBlur={() => setIsShowKeyboard(false)}
+              onChangeText={(text) => setLogin(text)}
+            />
+            <TextInput
+              style={[formStyles.mainText, formStyles.input]}
+              placeholder="Адреса електронної пошти"
+              onFocus={() => setIsShowKeyboard(true)}
+              onBlur={() => setIsShowKeyboard(false)}
+              onChangeText={(text) => setEmail(text)}
+            />
+            <TextInput
+              style={[
+                formStyles.input,
+                formStyles.lastInput,
+                formStyles.mainText,
+              ]}
+              placeholder="Пароль"
+              secureTextEntry={true}
+              onFocus={() => setIsShowKeyboard(true)}
+              onBlur={() => setIsShowKeyboard(false)}
+              onChangeText={(text) => setPassword(text)}
+            />
+            <TouchableOpacity
+              style={formStyles.button}
+              onPress={handleRegistration}
+            >
+              <Text style={[formStyles.buttonText, formStyles.mainText]}>
+                Зареєстуватися
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Text style={[formStyles.mainText, formStyles.text]}>
+                Вже є акаунт? Увійти
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </ImageBackground>
+    </TouchableWithoutFeedback>
   );
 }
 
