@@ -4,15 +4,10 @@ import {
   TextInput,
   Text,
   View,
-  ImageBackground,
   StyleSheet,
-  KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Keyboard,
 } from "react-native";
+import { BackgroundContainer } from "./BackgroundContainer";
 import { formStyles } from "./Styles";
-
-import bgImage from "./image/PhotoBG.jpg";
 
 export default function LoginScreen() {
   const [isShowKeyboard, setIsShowKeyboard] = useState(false);
@@ -28,60 +23,50 @@ export default function LoginScreen() {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-      <ImageBackground source={bgImage} style={formStyles.backgroundImage}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <BackgroundContainer>
+      <View
+        style={[
+          {
+            ...formStyles.formContainer,
+            marginBottom: isShowKeyboard ? -220 : 0,
+          },
+          styles.loginContainer,
+        ]}
+      >
+        <Text style={[formStyles.title, styles.loginTitle]}>Увійти</Text>
+        <TextInput
+          style={[formStyles.input, formStyles.mainText]}
+          placeholder="Адреса електронної пошти"
+          onFocus={() => setIsShowKeyboard(true)}
+          onBlur={() => setIsShowKeyboard(false)}
+          onChangeText={(text) => setEmail(text)}
+        />
+        <TextInput
+          style={[formStyles.input, formStyles.lastInput, formStyles.mainText]}
+          placeholder="Пароль"
+          secureTextEntry={true}
+          onFocus={() => setIsShowKeyboard(true)}
+          onBlur={() => setIsShowKeyboard(false)}
+          onChangeText={(text) => setPassword(text)}
+        />
+        <TouchableOpacity
+          style={formStyles.button}
+          onPress={handleRegistration}
         >
-          <View
-            style={[
-              {
-                ...formStyles.formContainer,
-                marginBottom: isShowKeyboard ? -220 : 0,
-              },
-              styles.loginContainer,
-            ]}
-          >
-            <Text style={[formStyles.title, styles.loginTitle]}>Увійти</Text>
-            <TextInput
-              style={[formStyles.input, formStyles.mainText]}
-              placeholder="Адреса електронної пошти"
-              onFocus={() => setIsShowKeyboard(true)}
-              onBlur={() => setIsShowKeyboard(false)}
-              onChangeText={(text) => setEmail(text)}
-            />
-            <TextInput
-              style={[
-                formStyles.input,
-                formStyles.lastInput,
-                formStyles.mainText,
-              ]}
-              placeholder="Пароль"
-              secureTextEntry={true}
-              onFocus={() => setIsShowKeyboard(true)}
-              onBlur={() => setIsShowKeyboard(false)}
-              onChangeText={(text) => setPassword(text)}
-            />
-            <TouchableOpacity
-              style={formStyles.button}
-              onPress={handleRegistration}
-            >
-              <Text style={[formStyles.buttonText, formStyles.mainText]}>
-                Увійти
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Text style={[formStyles.mainText, formStyles.text]}>
-                Немає акаунту?{" "}
-                <Text style={{ textDecorationLine: "underline" }}>
-                  Зареєструватися
-                </Text>
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </KeyboardAvoidingView>
-      </ImageBackground>
-    </TouchableWithoutFeedback>
+          <Text style={[formStyles.buttonText, formStyles.mainText]}>
+            Увійти
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <Text style={[formStyles.mainText, formStyles.text]}>
+            Немає акаунту?{" "}
+            <Text style={{ textDecorationLine: "underline" }}>
+              Зареєструватися
+            </Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </BackgroundContainer>
   );
 }
 

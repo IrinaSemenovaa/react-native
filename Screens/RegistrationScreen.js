@@ -4,18 +4,13 @@ import {
   TextInput,
   Text,
   View,
-  ImageBackground,
   Image,
   StyleSheet,
-  KeyboardAvoidingView,
-  Keyboard,
 } from "react-native";
+import { BackgroundContainer } from "./BackgroundContainer";
 import { formStyles } from "./Styles";
-
-import bgImage from "./image/PhotoBG.jpg";
 import avatarImage from "./image/defAvatar.png";
 import addBtn from "./image/add.png";
-import { TouchableWithoutFeedback } from "react-native";
 
 export default function RegistrationScreen() {
   const [isShowKeyboard, setIsShowKeyboard] = useState(false);
@@ -33,70 +28,60 @@ export default function RegistrationScreen() {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-      <ImageBackground source={bgImage} style={formStyles.backgroundImage}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
-          <View
-            style={[
-              {
-                ...formStyles.formContainer,
-                marginBottom: isShowKeyboard ? -200 : 0,
-              },
-              styles.registationContainer,
-            ]}
-          >
-            <View style={styles.avatarContainer}>
-              <Image source={avatarImage} style={styles.avatar} />
-              <View style={styles.plusContainer}>
-                <Image source={addBtn} style={styles.plusIcon} />
-              </View>
-            </View>
-            <Text style={formStyles.title}>Реєстрація</Text>
-            <TextInput
-              style={[formStyles.mainText, formStyles.input]}
-              placeholder="Логін"
-              onFocus={() => setIsShowKeyboard(true)}
-              onBlur={() => setIsShowKeyboard(false)}
-              onChangeText={(text) => setLogin(text)}
-            />
-            <TextInput
-              style={[formStyles.mainText, formStyles.input]}
-              placeholder="Адреса електронної пошти"
-              onFocus={() => setIsShowKeyboard(true)}
-              onBlur={() => setIsShowKeyboard(false)}
-              onChangeText={(text) => setEmail(text)}
-            />
-            <TextInput
-              style={[
-                formStyles.input,
-                formStyles.lastInput,
-                formStyles.mainText,
-              ]}
-              placeholder="Пароль"
-              secureTextEntry={true}
-              onFocus={() => setIsShowKeyboard(true)}
-              onBlur={() => setIsShowKeyboard(false)}
-              onChangeText={(text) => setPassword(text)}
-            />
-            <TouchableOpacity
-              style={formStyles.button}
-              onPress={handleRegistration}
-            >
-              <Text style={[formStyles.buttonText, formStyles.mainText]}>
-                Зареєстуватися
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Text style={[formStyles.mainText, formStyles.text]}>
-                Вже є акаунт? Увійти
-              </Text>
-            </TouchableOpacity>
+    <BackgroundContainer>
+      <View
+        style={[
+          {
+            ...formStyles.formContainer,
+            marginBottom: isShowKeyboard ? -200 : 0,
+          },
+          styles.registationContainer,
+        ]}
+      >
+        <View style={styles.avatarContainer}>
+          <Image source={avatarImage} style={styles.avatar} />
+          <View style={styles.plusContainer}>
+            <Image source={addBtn} style={styles.plusIcon} />
           </View>
-        </KeyboardAvoidingView>
-      </ImageBackground>
-    </TouchableWithoutFeedback>
+        </View>
+        <Text style={formStyles.title}>Реєстрація</Text>
+        <TextInput
+          style={[formStyles.mainText, formStyles.input]}
+          placeholder="Логін"
+          onFocus={() => setIsShowKeyboard(true)}
+          onBlur={() => setIsShowKeyboard(false)}
+          onChangeText={(text) => setLogin(text)}
+        />
+        <TextInput
+          style={[formStyles.mainText, formStyles.input]}
+          placeholder="Адреса електронної пошти"
+          onFocus={() => setIsShowKeyboard(true)}
+          onBlur={() => setIsShowKeyboard(false)}
+          onChangeText={(text) => setEmail(text)}
+        />
+        <TextInput
+          style={[formStyles.input, formStyles.lastInput, formStyles.mainText]}
+          placeholder="Пароль"
+          secureTextEntry={true}
+          onFocus={() => setIsShowKeyboard(true)}
+          onBlur={() => setIsShowKeyboard(false)}
+          onChangeText={(text) => setPassword(text)}
+        />
+        <TouchableOpacity
+          style={formStyles.button}
+          onPress={handleRegistration}
+        >
+          <Text style={[formStyles.buttonText, formStyles.mainText]}>
+            Зареєстуватися
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <Text style={[formStyles.mainText, formStyles.text]}>
+            Вже є акаунт? Увійти
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </BackgroundContainer>
   );
 }
 
