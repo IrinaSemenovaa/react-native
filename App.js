@@ -1,34 +1,23 @@
+import React, { useState } from "react";
+import "react-native-gesture-handler";
+import { NavigationContainer } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
-import RegistrationScreen from "./Screens/RegistrationScreen";
-import { useFonts } from "expo-font";
-import LoginScreen from "./Screens/LoginScreen";
-import PostsScreen from "./Screens/PostsScreen";
+import { useRoute } from "./Screens/router";
+import { loadFonts } from "./Screens/fonts";
 
 export default function App() {
-  const [fontsLoaded] = useFonts({
-    RobotoRegular: require("./assets/fonts/Roboto-Regular.ttf"),
-    RobotoMedium: require("./assets/fonts/Roboto-Medium.ttf"),
-    RobotoBold: require("./assets/fonts/Roboto-Bold.ttf"),
-  });
+  const [isAuth, setIsAuth] = useState(false);
+  const [fontsLoaded] = loadFonts();
   if (!fontsLoaded) {
     return null;
   }
-  
+
+  const routing = useRoute(isAuth);
+
   return (
-    <View style={styles.container}>
-      {/* <RegistrationScreen /> */}
-      <LoginScreen/>
-      {/* <PostsScreen/> */}
+    <NavigationContainer>
       <StatusBar style="auto" />
-    </View>
+      {routing}
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-  },
-});

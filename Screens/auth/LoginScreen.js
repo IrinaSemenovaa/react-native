@@ -6,20 +6,35 @@ import {
   View,
   StyleSheet,
 } from "react-native";
-import { BackgroundContainer } from "./BackgroundContainer";
-import { formStyles } from "./Styles";
+import { BackgroundContainer } from "../BackgroundContainer";
+import { formStyles } from "../Styles";
+// import { CommonActions } from "@react-navigation/native";
 
-export default function LoginScreen() {
+export default function LoginScreen({ navigation }) {
   const [isShowKeyboard, setIsShowKeyboard] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleRegistration = () => {
+  const handleLogin = () => {
     const formData = {
       email: email,
       password: password,
     };
     console.log(`Login: ${JSON.stringify(formData)}`);
+
+    navigation.navigate("Home", {
+      screen: "PostsScreen",
+    });
+
+    // navigation.dispatch(
+    //   CommonActions.reset({
+    //     index: 0,
+    //     routes: [{ name: "Home", params: { screen: "PostsScreen" } }],
+    //   })
+    // );
+
+    setEmail("");
+    setPassword("");
   };
 
   return (
@@ -49,10 +64,7 @@ export default function LoginScreen() {
           onBlur={() => setIsShowKeyboard(false)}
           onChangeText={(text) => setPassword(text)}
         />
-        <TouchableOpacity
-          style={formStyles.button}
-          onPress={handleRegistration}
-        >
+        <TouchableOpacity style={formStyles.button} onPress={handleLogin}>
           <Text style={[formStyles.buttonText, formStyles.mainText]}>
             Увійти
           </Text>
@@ -60,7 +72,10 @@ export default function LoginScreen() {
         <TouchableOpacity>
           <Text style={[formStyles.mainText, formStyles.text]}>
             Немає акаунту?{" "}
-            <Text style={{ textDecorationLine: "underline" }}>
+            <Text
+              onPress={() => navigation.navigate("Registration")}
+              style={{ textDecorationLine: "underline" }}
+            >
               Зареєструватися
             </Text>
           </Text>

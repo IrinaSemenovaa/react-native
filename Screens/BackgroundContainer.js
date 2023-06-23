@@ -3,7 +3,6 @@ import {
   ImageBackground,
   Keyboard,
   KeyboardAvoidingView,
-  StyleSheet,
   TouchableWithoutFeedback,
 } from "react-native";
 

@@ -67,6 +67,9 @@ export const formStyles = StyleSheet.create({
   buttonText: {
     textAlign: "center",
     color: "#FFFFFF",
+    fontSize: 16,
+    lineHeight: 19,
+    fontFamily: "RobotoRegular",
   },
   text: {
     color: "#1B4371",

@@ -7,12 +7,12 @@ import {
   Image,
   StyleSheet,
 } from "react-native";
-import { BackgroundContainer } from "./BackgroundContainer";
-import { formStyles } from "./Styles";
-import avatarImage from "./image/defAvatar.png";
-import addBtn from "./image/add.png";
+import { BackgroundContainer } from "../BackgroundContainer";
+import { formStyles } from "../Styles";
+import avatarImage from "../image/defAvatar.png";
+import addBtn from "../image/add.png";
 
-export default function RegistrationScreen() {
+export default function RegistrationScreen({ navigation }) {
   const [isShowKeyboard, setIsShowKeyboard] = useState(false);
   const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
@@ -25,6 +25,12 @@ export default function RegistrationScreen() {
       password: password,
     };
     console.log(`Registration: ${JSON.stringify(formData)}`);
+    // перенапрвлення
+    navigation.navigate("PostsScreen");
+    // чистка полів
+    setLogin("");
+    setEmail("");
+    setPassword("");
   };
 
   return (
@@ -75,7 +81,7 @@ export default function RegistrationScreen() {
             Зареєстуватися
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("Login")}>
           <Text style={[formStyles.mainText, formStyles.text]}>
             Вже є акаунт? Увійти
           </Text>
