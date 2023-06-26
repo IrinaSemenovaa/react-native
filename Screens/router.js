@@ -7,10 +7,10 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 
 import RegistrationScreen from "./auth/RegistrationScreen";
 import LoginScreen from "./auth/LoginScreen";
-import PostsScreen from "./main/PostsScreen";
 import ProfileScreen from "./main/ProfileScreen";
 import NewPostScreen from "./main/CreatePostsScreen";
 import Home from "./main/Home";
+import { PostsNavigation } from "./main/PostNavigationScreen";
 
 import postsIcon from "./image/posts-screen-icon.png";
 import createPostIcon from "./image/new-post-icon.png";
@@ -51,28 +51,35 @@ export const useRoute = (isAuth) => {
       }}
     >
       <MainTab.Screen
-        name="PostsScreen"
-        component={PostsScreen}
+        name="Posts"
+        component={PostsNavigation}
         options={{
-          title: "Публікації",
-          headerTitleStyle: {
-            fontWeight: "500",
-            fontSize: 17,
-            lineHeight: 22,
-            fontFamily: "RobotoMedium",
-          },
-          headerRight: () => (
-            <TouchableOpacity>
-              <Image
-                source={logOutIcon}
-                style={{ marginRight: 16, width: 24, height: 24 }}
-              />
-            </TouchableOpacity>
-          ),
+          headerShown: false,
           tabBarIcon: () => (
             <Image source={postsIcon} style={{ width: 40, height: 40 }} />
           ),
         }}
+
+        // options={{
+        //   title: "Публікації",
+        //   headerTitleStyle: {
+        //     fontWeight: "500",
+        //     fontSize: 17,
+        //     lineHeight: 22,
+        //     fontFamily: "RobotoMedium",
+        //   },
+        //   headerRight: () => (
+        //     <TouchableOpacity>
+        //       <Image
+        //         source={logOutIcon}
+        //         style={{ marginRight: 16, width: 24, height: 24 }}
+        //       />
+        //     </TouchableOpacity>
+        //   ),
+        //   tabBarIcon: () => (
+        //     <Image source={postsIcon} style={{ width: 40, height: 40 }} />
+        //   ),
+        // }}
       ></MainTab.Screen>
       <MainTab.Screen
         name="CreatePostsScreen"

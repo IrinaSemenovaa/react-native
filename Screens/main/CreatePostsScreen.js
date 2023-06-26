@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   StyleSheet,
@@ -7,53 +7,130 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Camera } from "expo-camera";
+import * as MediaLibrary from "expo-media-library";
+import * as Location from "expo-location";
+
 import { formStyles } from "../Styles";
 
-import contentImage from "../image/content-img.png";
 import camera from "../image/camera.png";
 import navIcon from "../image/nav-icon.png";
 
-export default function NewPostScreen() {
-  const [isImageUploaded, setIsImageUploaded] = useState(false);
-  const [title, setTitle] = useState("");
-  const [location, setLocation] = useState("");
+export default function NewPostScreen({ navigation }) {
+  const [hasPermission, setHasPermission] = useState(null);
+  const [cameraRef, setCameraRef] = useState(null);
   const [isButtonActive, setIsButtonActive] = useState(false);
+  const [photo, setPhoto] = useState(null);
+  const [location, setLocation] = useState(null);
+  const [locationInfo, setLocationInfo] = useState("");
+  const [title, setTitle] = useState("");
 
-  const handleImageUploaded = () => {
-    // uploaded img
-    setIsImageUploaded(true);
-    setIsButtonActive(true);
+  useEffect(() => {
+    (async () => {
+      const { status } = await Camera.requestCameraPermissionsAsync();
+      await MediaLibrary.requestPermissionsAsync();
+
+      setHasPermission(status === "granted");
+
+      let { status: locationStatus } =
+        await Location.requestForegroundPermissionsAsync();
+      if (locationStatus === "granted") {
+        let location = await Location.getCurrentPositionAsync({});
+        setLocation(location);
+
+        const reverseGeocode = async () => {
+          try {
+            const geocode = await Location.reverseGeocodeAsync({
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+            });
+            if (geocode.length > 0) {
+              const { city, country } = geocode[0];
+              setLocationInfo(`${city}, ${country}`);
+            } else {
+              console.log("Местоположение не найдено");
+            }
+          } catch (error) {
+            console.log("Ошибка при геокодировании:", error);
+          }
+        };
+
+        reverseGeocode();
+      } else {
+        console.log("Permission to access location denied");
+      }
+    })();
+  }, []);
+
+  const handlePublish = () => {
+    console.log("Location:", location);
+    navigation.navigate("PostsScreen", { photo, title, locationInfo });
   };
+
+  const handleCameraPress = async () => {
+    if (cameraRef) {
+      const { uri } = await cameraRef.takePictureAsync();
+      await MediaLibrary.createAssetAsync(uri);
+      setPhoto(uri);
+      setIsButtonActive(true);
+
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === "granted") {
+        let location = await Location.getCurrentPositionAsync({});
+        setLocation(location);
+
+        const reverseGeocode = async () => {
+          try {
+            const geocode = await Location.reverseGeocodeAsync({
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+            });
+            if (geocode.length > 0) {
+              const { city, country } = geocode[0];
+              setLocationInfo(`${city}, ${country}`);
+            } else {
+              console.log("Местоположение не найдено");
+            }
+          } catch (error) {
+            console.log("Ошибка при геокодировании:", error);
+          }
+        };
+
+        reverseGeocode();
+      } else {
+        console.log("Permission to access location denied");
+      }
+    }
+  };
+
+  if (hasPermission === null) {
+    return <View />;
+  }
+  if (hasPermission === false) {
+    return <Text>No access to camera</Text>;
+  }
 
   return (
     <View style={styles.container}>
-      {isImageUploaded ? (
-        <View>
-          <View style={styles.imageContainer}>
-            <Image style={styles.image} />
-            <TouchableOpacity onPress={handleImageUploaded}>
-              <Image source={camera} style={styles.cameraIcon} />
-            </TouchableOpacity>
-          </View>
-          <Text
-            style={[{ color: "#BDBDBD", marginTop: 8 }, formStyles.mainText]}
-          >
-            Редагувати фото
-          </Text>
-        </View>
-      ) : (
-        <View>
-          <Image source={contentImage} style={styles.image} />
-          <TouchableOpacity onPress={handleImageUploaded}>
+      <View>
+        <Camera style={styles.imageContainer} ref={setCameraRef}>
+          {photo && (
+            <View>
+              <Image
+                style={styles.photoContainer}
+                source={{ uri: photo }}
+                resizeMode="contain"
+              />
+            </View>
+          )}
+          <TouchableOpacity onPress={handleCameraPress}>
             <Image source={camera} style={styles.cameraIcon} />
           </TouchableOpacity>
-          <Text
-            style={[{ color: "#BDBDBD", marginTop: 8 }, formStyles.mainText]}
-          >
-            Завантажте фото
-          </Text>
-        </View>
-      )}
+        </Camera>
+        <Text style={[{ color: "#BDBDBD", marginTop: 8 }, formStyles.mainText]}>
+          Завантажте фото
+        </Text>
+      </View>
       <View style={styles.inputContainer}>
         <TextInput
           style={[styles.input, formStyles.mainText]}
@@ -65,12 +142,12 @@ export default function NewPostScreen() {
           <TextInput
             style={[styles.input, formStyles.mainText]}
             placeholder="Місцевість..."
-            onChangeText={(text) => setLocation(text)}
+            value={locationInfo}
+            editable={false}
           />
         </View>
       </View>
       <TouchableOpacity
-        // style={{ backgroundColor: isButtonActive ? "green" : "gray" }}
         style={
           isButtonActive
             ? formStyles.button
@@ -80,6 +157,7 @@ export default function NewPostScreen() {
               }
         }
         disabled={!isButtonActive}
+        onPress={handlePublish}
       >
         <Text
           style={
@@ -104,18 +182,23 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     position: "relative",
-  },
-  image: {
+    alignItems: "center",
+    justifyContent: "center",
     width: 343,
     height: 240,
     marginTop: 32,
+    borderRadius: 8,
   },
   cameraIcon: {
-    position: "absolute",
-    top: -145,
-    left: 145,
     width: 60,
     height: 60,
+  },
+  photoContainer: {
+    position: "absolute",
+    top: -90,
+    left: -172,
+    width: 343,
+    height: 240,
   },
   inputContainer: {
     alignSelf: "flex-start",

@@ -12,7 +12,7 @@ export default function App() {
     return null;
   }
 
-  const routing = useRoute(isAuth);
+  const routing = useRoute(true);
 
   return (
     <NavigationContainer>
