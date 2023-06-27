@@ -59,27 +59,6 @@ export const useRoute = (isAuth) => {
             <Image source={postsIcon} style={{ width: 40, height: 40 }} />
           ),
         }}
-
-        // options={{
-        //   title: "Публікації",
-        //   headerTitleStyle: {
-        //     fontWeight: "500",
-        //     fontSize: 17,
-        //     lineHeight: 22,
-        //     fontFamily: "RobotoMedium",
-        //   },
-        //   headerRight: () => (
-        //     <TouchableOpacity>
-        //       <Image
-        //         source={logOutIcon}
-        //         style={{ marginRight: 16, width: 24, height: 24 }}
-        //       />
-        //     </TouchableOpacity>
-        //   ),
-        //   tabBarIcon: () => (
-        //     <Image source={postsIcon} style={{ width: 40, height: 40 }} />
-        //   ),
-        // }}
       ></MainTab.Screen>
       <MainTab.Screen
         name="CreatePostsScreen"

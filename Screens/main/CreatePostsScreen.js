@@ -25,6 +25,23 @@ export default function NewPostScreen({ navigation }) {
   const [locationInfo, setLocationInfo] = useState("");
   const [title, setTitle] = useState("");
 
+  const reverseGeocode = async (latitude, longitude) => {
+    try {
+      const geocode = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude,
+      });
+      if (geocode.length > 0) {
+        const { city, country } = geocode[0];
+        setLocationInfo(`${city}, ${country}`);
+      } else {
+        console.log("Местоположение не найдено");
+      }
+    } catch (error) {
+      console.log("Ошибка при геокодировании:", error);
+    }
+  };
+
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -38,24 +55,7 @@ export default function NewPostScreen({ navigation }) {
         let location = await Location.getCurrentPositionAsync({});
         setLocation(location);
 
-        const reverseGeocode = async () => {
-          try {
-            const geocode = await Location.reverseGeocodeAsync({
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-            });
-            if (geocode.length > 0) {
-              const { city, country } = geocode[0];
-              setLocationInfo(`${city}, ${country}`);
-            } else {
-              console.log("Местоположение не найдено");
-            }
-          } catch (error) {
-            console.log("Ошибка при геокодировании:", error);
-          }
-        };
-
-        reverseGeocode();
+        reverseGeocode(location.coords.latitude, location.coords.longitude);
       } else {
         console.log("Permission to access location denied");
       }
@@ -79,24 +79,7 @@ export default function NewPostScreen({ navigation }) {
         let location = await Location.getCurrentPositionAsync({});
         setLocation(location);
 
-        const reverseGeocode = async () => {
-          try {
-            const geocode = await Location.reverseGeocodeAsync({
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-            });
-            if (geocode.length > 0) {
-              const { city, country } = geocode[0];
-              setLocationInfo(`${city}, ${country}`);
-            } else {
-              console.log("Местоположение не найдено");
-            }
-          } catch (error) {
-            console.log("Ошибка при геокодировании:", error);
-          }
-        };
-
-        reverseGeocode();
+        reverseGeocode(location.coords.latitude, location.coords.longitude);
       } else {
         console.log("Permission to access location denied");
       }
