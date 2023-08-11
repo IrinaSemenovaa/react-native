@@ -6,35 +6,30 @@ import {
   View,
   StyleSheet,
 } from "react-native";
+import { useDispatch } from "react-redux";
+
 import { BackgroundContainer } from "../BackgroundContainer";
 import { formStyles } from "../Styles";
-// import { CommonActions } from "@react-navigation/native";
+
+import { loginUser } from "../redux/auth/authOperations";
+
+const initialState = {
+  nickname: "",
+  email: "",
+  password: "",
+};
 
 export default function LoginScreen({ navigation }) {
   const [isShowKeyboard, setIsShowKeyboard] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [isEmailFocused, setIsEmailFocused] = useState(false);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  const [state, setState] = useState(initialState);
+
+  const dispatch = useDispatch();
 
   const handleLogin = () => {
-    const formData = {
-      email: email,
-      password: password,
-    };
-    console.log(`Login: ${JSON.stringify(formData)}`);
-
-    navigation.navigate("Home", {
-      screen: "PostsScreen",
-    });
-
-    // navigation.dispatch(
-    //   CommonActions.reset({
-    //     index: 0,
-    //     routes: [{ name: "Home", params: { screen: "PostsScreen" } }],
-    //   })
-    // );
-
-    setEmail("");
-    setPassword("");
+    dispatch(loginUser(state));
+    setState(initialState);
   };
 
   return (
@@ -50,19 +45,45 @@ export default function LoginScreen({ navigation }) {
       >
         <Text style={[formStyles.title, styles.loginTitle]}>Увійти</Text>
         <TextInput
-          style={[formStyles.input, formStyles.mainText]}
+          style={[
+            formStyles.mainText,
+            formStyles.input,
+            isEmailFocused ? formStyles.inputFocused : null,
+          ]}
           placeholder="Адреса електронної пошти"
-          onFocus={() => setIsShowKeyboard(true)}
-          onBlur={() => setIsShowKeyboard(false)}
-          onChangeText={(text) => setEmail(text)}
+          onFocus={() => {
+            setIsShowKeyboard(true);
+            setIsEmailFocused(true);
+          }}
+          onBlur={() => {
+            setIsShowKeyboard(false);
+            setIsEmailFocused(false);
+          }}
+          value={state.email}
+          onChangeText={(value) =>
+            setState((prevState) => ({ ...prevState, email: value }))
+          }
         />
         <TextInput
-          style={[formStyles.input, formStyles.lastInput, formStyles.mainText]}
+          style={[
+            formStyles.mainText,
+            formStyles.input,
+            formStyles.lastInput,
+            isPasswordFocused ? formStyles.inputFocused : null,
+          ]}
           placeholder="Пароль"
           secureTextEntry={true}
-          onFocus={() => setIsShowKeyboard(true)}
-          onBlur={() => setIsShowKeyboard(false)}
-          onChangeText={(text) => setPassword(text)}
+          onFocus={() => {
+            setIsShowKeyboard(true);
+            setIsPasswordFocused(true);
+          }}
+          onBlur={() => {
+            setIsShowKeyboard(false);
+            setIsPasswordFocused(false);
+          }}
+          onChangeText={(value) =>
+            setState((prevState) => ({ ...prevState, password: value }))
+          }
         />
         <TouchableOpacity style={formStyles.button} onPress={handleLogin}>
           <Text style={[formStyles.buttonText, formStyles.mainText]}>

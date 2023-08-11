@@ -7,23 +7,51 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSelector } from "react-redux";
 import { Camera } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
 import * as Location from "expo-location";
 
 import { formStyles } from "../Styles";
 
+import { Feather } from "@expo/vector-icons";
 import camera from "../image/camera.png";
+import transpCamera from "../image/transpCamera.png";
 import navIcon from "../image/nav-icon.png";
+
+import { db, storage } from "../../firebase/config";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  updateDoc,
+} from "firebase/firestore";
 
 export default function NewPostScreen({ navigation }) {
   const [hasPermission, setHasPermission] = useState(null);
   const [cameraRef, setCameraRef] = useState(null);
   const [isButtonActive, setIsButtonActive] = useState(false);
-  const [photo, setPhoto] = useState(null);
+  const [isPhotoTaken, setIsPhotoTaken] = useState(false);
+  const [photoURL, setPhotoURL] = useState(null);
   const [location, setLocation] = useState(null);
   const [locationInfo, setLocationInfo] = useState("");
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
   const [title, setTitle] = useState("");
+
+   const user = useSelector((state) => state.auth.user);
+
+  const resetState = () => {
+    setPhotoURL(null);
+    setIsButtonActive(false);
+    setIsPhotoTaken(false);
+    setLocation(null);
+    setLocationInfo("");
+    setLatitude(null);
+    setLongitude(null);
+    setTitle("");
+  };
 
   const reverseGeocode = async (latitude, longitude) => {
     try {
@@ -35,10 +63,10 @@ export default function NewPostScreen({ navigation }) {
         const { city, country } = geocode[0];
         setLocationInfo(`${city}, ${country}`);
       } else {
-        console.log("Местоположение не найдено");
+        console.log("Location not found");
       }
     } catch (error) {
-      console.log("Ошибка при геокодировании:", error);
+      console.log("Geocoding error:", error);
     }
   };
 
@@ -62,17 +90,92 @@ export default function NewPostScreen({ navigation }) {
     })();
   }, []);
 
-  const handlePublish = () => {
-    console.log("Location:", location);
-    navigation.navigate("PostsScreen", { photo, title, locationInfo });
+  const handlePublish = async () => {
+    try {
+      const downloadURL = await uploadPhotoToServer();
+
+      const postId = await uploadPostToServer(downloadURL);
+
+      console.log("Download URL:", downloadURL);
+      console.log("Post Id:", postId);
+
+      navigation.navigate("PostsScreen", {
+        photoURL,
+        title,
+        locationInfo,
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        postId,
+      });
+
+      resetState();
+    } catch (error) {
+      console.error("Error handling publish:", error);
+    }
+  };
+
+  const uploadPhotoToServer = async () => {
+    try {
+      console.log("User ID before adding post:", user.id);
+      console.log("User Name before adding post:", user.name);
+
+      const response = await fetch(photoURL);
+      const file = await response.blob();
+
+      const uniquePostId = Date.now().toString();
+
+      const storageRef = ref(storage, `postImage/${uniquePostId}`);
+      const uploadTask = uploadBytes(storageRef, file);
+
+      const snapshot = await uploadTask;
+
+      const downloadURL = await getDownloadURL(snapshot.ref);
+
+      console.log("Photo successfully uploaded to the server");
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading photo to server:", error);
+      throw error;
+    }
+  };
+
+  const uploadPostToServer = async (downloadURL) => {
+    try {
+      const newPost = {
+        photoURL: downloadURL,
+        title,
+        locationInfo,
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        timestamp: serverTimestamp(),
+        userName: user.name,
+        userId: user.id,
+        userPhoto: user.photo,
+      };
+
+      const docRef = await addDoc(collection(db, "posts"), newPost);
+
+      const postId = docRef.id;
+      await updateDoc(docRef, { postId });
+
+      console.log(
+        "Post successfully uploaded to Firestore with ID:",
+        docRef.id
+      );
+      return docRef.id;
+    } catch (error) {
+      console.error("Error loading post in Firestore:", error);
+      throw error;
+    }
   };
 
   const handleCameraPress = async () => {
     if (cameraRef) {
       const { uri } = await cameraRef.takePictureAsync();
       await MediaLibrary.createAssetAsync(uri);
-      setPhoto(uri);
+      setPhotoURL(uri);
       setIsButtonActive(true);
+      setIsPhotoTaken(true);
 
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status === "granted") {
@@ -97,21 +200,25 @@ export default function NewPostScreen({ navigation }) {
     <View style={styles.container}>
       <View>
         <Camera style={styles.imageContainer} ref={setCameraRef}>
-          {photo && (
+          {photoURL && (
             <View>
               <Image
                 style={styles.photoContainer}
-                source={{ uri: photo }}
+                source={{ uri: photoURL }}
                 resizeMode="contain"
               />
             </View>
           )}
           <TouchableOpacity onPress={handleCameraPress}>
-            <Image source={camera} style={styles.cameraIcon} />
+            {isPhotoTaken ? (
+              <Image source={transpCamera} style={styles.cameraIcon} />
+            ) : (
+              <Image source={camera} style={styles.cameraIcon} />
+            )}
           </TouchableOpacity>
         </Camera>
         <Text style={[{ color: "#BDBDBD", marginTop: 8 }, formStyles.mainText]}>
-          Завантажте фото
+          {isPhotoTaken ? "Редагувати фото" : "Завантажте фото"}
         </Text>
       </View>
       <View style={styles.inputContainer}>
@@ -152,6 +259,21 @@ export default function NewPostScreen({ navigation }) {
           Опублікувати
         </Text>
       </TouchableOpacity>
+      <TouchableOpacity onPress={resetState}>
+        <View
+          style={{
+            width: 70,
+            height: 40,
+            borderRadius: 20,
+            marginTop: 135,
+            backgroundColor: "#F6F6F6",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Feather name="trash-2" size={24} color="#BDBDBD" />
+        </View>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -182,6 +304,7 @@ const styles = StyleSheet.create({
     left: -172,
     width: 343,
     height: 240,
+    borderRadius: 8,
   },
   inputContainer: {
     alignSelf: "flex-start",
@@ -203,8 +326,8 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
   },
   locationIcon: {
-    width: 16,
-    height: 18,
+    width: 24,
+    height: 24,
     marginBottom: 15,
   },
 });

@@ -7,30 +7,72 @@ import {
   Image,
   StyleSheet,
 } from "react-native";
+import { useDispatch } from "react-redux";
+import * as ImagePicker from "expo-image-picker";
+
+import {
+  registerUser,
+  uploadAvatarToStorage,
+} from "../redux/auth/authOperations";
+
 import { BackgroundContainer } from "../BackgroundContainer";
 import { formStyles } from "../Styles";
+
 import avatarImage from "../image/defAvatar.png";
-import addBtn from "../image/add.png";
+import { AntDesign } from "@expo/vector-icons";
+import deleteAvatar from "../image/deleteAvatar.png";
+
+const initialState = {
+  nickname: "",
+  email: "",
+  password: "",
+  avatar: null,
+};
 
 export default function RegistrationScreen({ navigation }) {
   const [isShowKeyboard, setIsShowKeyboard] = useState(false);
-  const [login, setLogin] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [isNicknameFocused, setIsNicknameFocused] = useState(false);
+  const [isEmailFocused, setIsEmailFocused] = useState(false);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
-  const handleRegistration = () => {
-    const formData = {
-      login: login,
-      email: email,
-      password: password,
-    };
-    console.log(`Registration: ${JSON.stringify(formData)}`);
-    // перенапрвлення
-    navigation.navigate("PostsScreen");
-    // чистка полів
-    setLogin("");
-    setEmail("");
-    setPassword("");
+  const [state, setState] = useState(initialState);
+
+  const dispatch = useDispatch();
+
+  const handleImagePicker = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const response = await fetch(result.uri);
+      const blob = await response.blob();
+
+      const avatarURL = await uploadAvatarToStorage(blob);
+      console.log("Inside handleImagePicker: ", avatarURL);
+
+      setState((prevState) => ({
+        ...prevState,
+        avatar: avatarURL,
+      }));
+    }
+  };
+
+  const handleRegistration = async () => {
+    try {
+      if (state.photo) {
+        dispatch(registerUser({ ...state }));
+      } else {
+        dispatch(registerUser(state));
+      }
+
+      setState(initialState);
+    } catch (error) {
+      console.error("Error during registration:", error);
+    }
   };
 
   return (
@@ -45,33 +87,91 @@ export default function RegistrationScreen({ navigation }) {
         ]}
       >
         <View style={styles.avatarContainer}>
-          <Image source={avatarImage} style={styles.avatar} />
-          <View style={styles.plusContainer}>
-            <Image source={addBtn} style={styles.plusIcon} />
-          </View>
+          {state.avatar ? (
+            <Image source={{ uri: state.avatar }} style={styles.avatar} />
+          ) : (
+            <Image source={avatarImage} style={styles.avatar} />
+          )}
+          {state.avatar ? (
+            <TouchableOpacity
+              onPress={() => {
+                setState({ ...state, avatar: null });
+              }}
+              style={styles.plusContainer}
+            >
+              <Image source={deleteAvatar} />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={handleImagePicker}
+              style={styles.plusContainer}
+            >
+              <AntDesign name="pluscircleo" size={25} color="#FF6C00" />
+            </TouchableOpacity>
+          )}
         </View>
         <Text style={formStyles.title}>Реєстрація</Text>
         <TextInput
-          style={[formStyles.mainText, formStyles.input]}
+          style={[
+            formStyles.mainText,
+            formStyles.input,
+            isNicknameFocused ? formStyles.inputFocused : null,
+          ]}
           placeholder="Логін"
-          onFocus={() => setIsShowKeyboard(true)}
-          onBlur={() => setIsShowKeyboard(false)}
-          onChangeText={(text) => setLogin(text)}
+          onFocus={() => {
+            setIsShowKeyboard(true);
+            setIsNicknameFocused(true);
+          }}
+          onBlur={() => {
+            setIsShowKeyboard(false);
+            setIsNicknameFocused(false);
+          }}
+          value={state.nickname}
+          onChangeText={(value) =>
+            setState((prevState) => ({ ...prevState, nickname: value }))
+          }
         />
         <TextInput
-          style={[formStyles.mainText, formStyles.input]}
+          style={[
+            formStyles.mainText,
+            formStyles.input,
+            isEmailFocused ? formStyles.inputFocused : null,
+          ]}
           placeholder="Адреса електронної пошти"
-          onFocus={() => setIsShowKeyboard(true)}
-          onBlur={() => setIsShowKeyboard(false)}
-          onChangeText={(text) => setEmail(text)}
+          onFocus={() => {
+            setIsShowKeyboard(true);
+            setIsEmailFocused(true);
+          }}
+          onBlur={() => {
+            setIsShowKeyboard(false);
+            setIsEmailFocused(false);
+          }}
+          value={state.email}
+          onChangeText={(value) =>
+            setState((prevState) => ({ ...prevState, email: value }))
+          }
         />
         <TextInput
-          style={[formStyles.input, formStyles.lastInput, formStyles.mainText]}
+          style={[
+            formStyles.mainText,
+            formStyles.input,
+            formStyles.lastInput,
+            isPasswordFocused ? formStyles.inputFocused : null,
+          ]}
           placeholder="Пароль"
           secureTextEntry={true}
-          onFocus={() => setIsShowKeyboard(true)}
-          onBlur={() => setIsShowKeyboard(false)}
-          onChangeText={(text) => setPassword(text)}
+          onFocus={() => {
+            setIsShowKeyboard(true);
+            setIsPasswordFocused(true);
+          }}
+          onBlur={() => {
+            setIsShowKeyboard(false);
+            setIsPasswordFocused(false);
+          }}
+          value={state.password}
+          onChangeText={(value) =>
+            setState((prevState) => ({ ...prevState, password: value }))
+          }
         />
         <TouchableOpacity
           style={formStyles.button}
@@ -111,9 +211,5 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 81,
     right: -12.5,
-  },
-  plusIcon: {
-    width: 25,
-    height: 25,
   },
 });

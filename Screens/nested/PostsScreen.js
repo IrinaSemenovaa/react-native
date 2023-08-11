@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import {
   Text,
   View,
@@ -8,50 +9,131 @@ import {
   TouchableOpacity,
 } from "react-native";
 
-import commentIcon from "../image/comment-icon.png";
-import navIcon from "../image/nav-icon.png";
+import { EvilIcons } from "@expo/vector-icons";
+import avatarImage from "../image/defAvatar.png";
+
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "../../firebase/config";
 
 export default function PostsScreen({ route, navigation }) {
+  const user = useSelector((state) => state.auth.user);
+  console.log("User PostScreen", user);
   const [posts, setPosts] = useState([]);
+  const [commentsCount, setCommentsCount] = useState({});
 
   useEffect(() => {
-    if (route.params) {
-      const { photo, title, locationInfo } = route.params;
-      const post = { photo, title, locationInfo };
-      setPosts((prevState) => [...prevState, post]);
-    }
-  }, [route.params]);
+    const unsubscribe = onSnapshot(collection(db, "posts"), (querySnapshot) => {
+      const updatedPosts = [];
+      const updatedCommentsCount = {};
+
+      querySnapshot.forEach((doc) => {
+        const post = doc.data();
+        updatedPosts.push(post);
+
+        if (post.comments && Array.isArray(post.comments)) {
+          updatedCommentsCount[post.postId] = post.comments.length;
+        } else {
+          updatedCommentsCount[post.postId] = 0;
+        }
+      });
+
+      setPosts(updatedPosts);
+      console.log(updatedPosts);
+      setCommentsCount(updatedCommentsCount);
+
+      console.log(updatedCommentsCount);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleOpenComments = (photoURL, postId) => {
+    navigation.navigate("Comments", {
+      photoURL,
+      postId,
+      userId: user.id,
+    });
+  };
+
+  const handleOpenMap = (photo, locationInfo, latitude, longitude) => {
+    navigation.navigate("Map", {
+      photo,
+      locationInfo,
+      latitude,
+      longitude,
+    });
+  };
 
   return (
     <View style={styles.postsContainer}>
       <View style={styles.userContainer}>
-        <Image style={styles.avatar} />
+        {user.photo ? (
+          <Image source={{ uri: user.photo }} style={styles.avatar} />
+        ) : (
+          <Image
+            source={avatarImage}
+            style={styles.avatar}
+          />
+        )}
         <View style={styles.userInfo}>
-          <Text style={styles.name}>Name</Text>
-          <Text style={styles.email}>Email</Text>
+          <Text style={styles.name}>{user.name}</Text>
+          <Text style={styles.email}>{user.email}</Text>
         </View>
       </View>
       <FlatList
         data={posts}
         renderItem={({ item }) => (
           <View style={styles.postContainer}>
-            <Image source={{ uri: item.photo }} style={styles.post} />
+            <Image source={{ uri: item.photoURL }} style={styles.post} />
             <View style={styles.contentContainer}>
               <Text style={styles.title}>{item.title}</Text>
               <View style={styles.detailsContainer}>
                 <View style={styles.commentsContainer}>
                   <TouchableOpacity
-                    onPress={() => navigation.navigate("CommentsScreen")}
+                    onPress={() =>
+                      handleOpenComments(item.photoURL, item.postId)
+                    }
                   >
-                    <Image source={commentIcon} style={styles.commentIcon} />
+                    <EvilIcons
+                      name="comment"
+                      size={24}
+                      color={
+                        commentsCount[item.postId] > 0 ? "#FF6C00" : "#BDBDBD"
+                      }
+                      style={styles.commentIcon}
+                    />
                   </TouchableOpacity>
-                  <Text style={styles.commentCount}>0</Text>
+                  <Text
+                    style={[
+                      styles.commentCount,
+                      {
+                        color:
+                          commentsCount[item.postId] > 0
+                            ? "#212121"
+                            : "#BDBDBD",
+                      },
+                    ]}
+                  >
+                    {commentsCount[item.postId] || 0}
+                  </Text>
                 </View>
                 <View style={styles.locationContainer}>
                   <TouchableOpacity
-                    onPress={() => navigation.navigate("MapScreen")}
+                    onPress={() =>
+                      handleOpenMap(
+                        item.photo,
+                        item.locationInfo,
+                        item.latitude,
+                        item.longitude
+                      )
+                    }
                   >
-                    <Image source={navIcon} style={styles.locationIcon} />
+                    <EvilIcons
+                      name="location"
+                      size={24}
+                      color="#BDBDBD"
+                      style={styles.locationIcon}
+                    />
                   </TouchableOpacity>
                   <Text style={styles.locationText}>{item.locationInfo}</Text>
                 </View>
@@ -83,7 +165,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 16,
-    backgroundColor: "gray",
   },
   userInfo: {
     marginLeft: 8,
@@ -109,6 +190,7 @@ const styles = StyleSheet.create({
   post: {
     width: 343,
     height: 240,
+    borderRadius: 8,
   },
   contentContainer: {
     alignItems: "flex-start",
@@ -131,21 +213,19 @@ const styles = StyleSheet.create({
     marginRight: 53,
   },
   commentIcon: {
-    width: 18,
-    height: 18,
     marginRight: 9,
+    transform: [{ scaleX: -1 }],
   },
   commentCount: {
+    fontFamily: "RobotoRegular",
+    fontWeight: "400",
     fontSize: 16,
-    color: "#BDBDBD",
   },
   locationContainer: {
     flexDirection: "row",
     alignItems: "center",
   },
   locationIcon: {
-    width: 18,
-    height: 20,
     marginRight: 8,
   },
   locationText: {
